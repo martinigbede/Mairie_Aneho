@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "928532847395",
+    "project_id": "mairieaneho-22b51",
+    "storage_bucket": "mairieaneho-22b51.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:928532847395:android:4263bb9b16ea4e1c2c4a96",
+        "android_client_info": {
+          "package_name": "com.example.mairie_aneho"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBm-1Yv3ENYtP0Ba22YsEycm2eATNlQA4w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
