@@ -40,6 +40,7 @@ class _CitoyenHomeState extends State<CitoyenHome> {
       appBar: AppBar(
         title: const Text('Accueil Citoyen'),
         backgroundColor: Colors.teal[800],
+        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),

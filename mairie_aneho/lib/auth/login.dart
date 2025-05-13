@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:mairie_aneho/screens/admin_home.dart';
 
+// import '../screens/admin/admin_dashboard_page.dart';
 import '../screens/citoyen_home.dart';
 import '../screens/agent_home.dart';
-import '../screens/admin_home.dart';
 import 'register.dart';
 
 class LoginPage extends StatefulWidget {
@@ -78,7 +79,9 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.blue.shade900,
+        backgroundColor: const Color.fromARGB(255, 13, 161, 75),
+        foregroundColor: Colors.white,
+        centerTitle: true,
         title: const Text('Connexion - Mairie d\'Aného'),
       ),
       body: Padding(
@@ -103,6 +106,7 @@ class _LoginPageState extends State<LoginPage> {
                   decoration: const InputDecoration(
                     labelText: 'Mot de passe',
                     prefixIcon: Icon(Icons.lock),
+                    suffixIcon: Icon(Icons.visibility_off),
                   ),
                 ),
                 const SizedBox(height: 20),

@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mairie_aneho/screens/admin_home.dart';
 
+// import 'admin/admin_dashboard_page.dart';
 import 'citoyen_home.dart';
-import 'agent_home.dart';
-import 'admin_home.dart';
 import 'service_carousel_page.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -74,7 +74,7 @@ class _SplashScreenState extends State<SplashScreen> {
         if (role == 'citoyen') {
           _redirectTo(const CitoyenHome());
         } else if (role == 'agent') {
-          _redirectTo(const AgentHome());
+          _redirectTo(const AdminHome());
         } else if (role == 'admin') {
           _redirectTo(const AdminHome());
         } else {
