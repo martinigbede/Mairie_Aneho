@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../../auth/login.dart';
 // import 'admin_pages/admin_agents_page.dart';
 // import 'admin_pages/admin_demandes_page.dart';
 
@@ -74,6 +76,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
+  void _logout(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,7 +91,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         title: const Text('Tableau de Bord Admin'),
         backgroundColor: Colors.teal[800],
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => _logout(context),
+            tooltip: 'Déconnexion',
+          ),
+        ],
       ),
+
       body: RefreshIndicator(
         onRefresh: fetchDashboardStats,
         child: ListView(
