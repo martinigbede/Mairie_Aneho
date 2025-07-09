@@ -36,16 +36,32 @@ class UrbanismePage extends StatelessWidget {
                   _serviceInfoCard(
                     context,
                     title: 'Permis de Construire',
-                    description:
-                        'Faites une demande de permis pour vos projets.',
+                    description: 'Faites une demande de permis pour vos projets.',
                     icon: Icons.house,
                   ),
                   _serviceInfoCard(
                     context,
                     title: 'Certificat d\'Urbanisme',
-                    description:
-                        'Obtenez un certificat pour vos démarches d\'urbanisme.',
+                    description: 'Obtenez un certificat pour vos démarches d\'urbanisme.',
                     icon: Icons.location_city,
+                  ),
+                  _serviceInfoCard(
+                    context,
+                    title: 'Plan de Lotissement',
+                    description: 'Consultez les plans des zones de lotissement.',
+                    icon: Icons.map,
+                  ),
+                  _serviceInfoCard(
+                    context,
+                    title: 'Déclaration Préalable',
+                    description: 'Effectuez une déclaration préalable de travaux.',
+                    icon: Icons.assignment_turned_in,
+                  ),
+                  _serviceInfoCard(
+                    context,
+                    title: 'Règlement d\'Urbanisme',
+                    description: 'Consultez les règlements applicables aux constructions.',
+                    icon: Icons.rule_folder,
                   ),
                 ],
               ),
@@ -74,7 +90,6 @@ class UrbanismePage extends StatelessWidget {
         ),
         subtitle: Text(description),
         onTap: () {
-          // Ajouter une logique pour la redirection ou afficher plus d'informations
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("Ouverture du service : $title")),
           );

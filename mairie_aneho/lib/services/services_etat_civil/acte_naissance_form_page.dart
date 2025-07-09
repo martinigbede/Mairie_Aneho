@@ -12,6 +12,9 @@ class NaissanceForm extends StatefulWidget {
 
 class _NaissanceFormState extends State<NaissanceForm> {
   final _formKey = GlobalKey<FormState>();
+  final _scrollController = ScrollController();
+
+  // Champs
   final _nomEnfantController = TextEditingController();
   final _dateNaissanceController = TextEditingController();
   final _lieuNaissanceController = TextEditingController();
@@ -28,12 +31,26 @@ class _NaissanceFormState extends State<NaissanceForm> {
   final _nbEnfantsVieController = TextEditingController();
   final _nbEnfantsDecedesController = TextEditingController();
   final _telephoneController = TextEditingController();
+
   String _sexe = 'Masculin';
   bool _pereEstDeclarant = false;
   bool _mereEstDeclarant = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.animateTo(
+        0,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
   void dispose() {
+    _scrollController.dispose();
     _nomEnfantController.dispose();
     _dateNaissanceController.dispose();
     _lieuNaissanceController.dispose();
@@ -54,270 +71,242 @@ class _NaissanceFormState extends State<NaissanceForm> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(1950),
       lastDate: DateTime.now(),
     );
     if (picked != null) {
-      setState(() {
-        _dateNaissanceController.text = DateFormat('yyyy-MM-dd').format(picked);
-      });
+      _dateNaissanceController.text = DateFormat('yyyy-MM-dd').format(picked);
     }
   }
 
   Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      bool confirmed = await _showConfirmationDialog();
-      if (!confirmed) return;
+    if (!_formKey.currentState!.validate()) return;
 
-      try {
-        final user = FirebaseAuth.instance.currentUser;
-        if (user == null) throw Exception("Utilisateur non connecté");
+    bool confirmed = await _showConfirmationDialog();
+    if (!confirmed) return;
 
-        final formData = {
-          'enfant': {
-            'nom': _nomEnfantController.text,
-            'sexe': _sexe,
-            'date_naissance': _dateNaissanceController.text,
-            'lieu_naissance': _lieuNaissanceController.text,
-          },
-          'pere': {
-            'nom': _nomPrenomPereController.text,
-            'age_nationalite': _ageNationalitePereController.text,
-            'profession': _professionPereController.text,
-            'domicile': _domicilePereController.text,
-          },
-          'mere': {
-            'nom': _nomPrenomMereController.text,
-            'age_nationalite': _ageNationaliteMereController.text,
-            'profession': _professionMereController.text,
-            'domicile': _domicileMereController.text,
-          },
-          'declarant': {
-            'nom': _nomPrenomDeclarantController.text,
-            'lien': _lienDeclarantController.text,
-            'telephone': _telephoneController.text,
-            'pere_est_declarant': _pereEstDeclarant,
-            'mere_est_declarant': _mereEstDeclarant,
-          },
-          'enfants_anterieurs': {
-            'vivants': _nbEnfantsVieController.text,
-            'decedes': _nbEnfantsDecedesController.text,
-          },
-        };
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception("Utilisateur non connecté");
 
-        await FirebaseFirestore.instance.collection('citizen_requests').add({
-          'uid': user.uid,
-          'form_type': 'naissance',
-          'form_data': formData,
-          'created_at': Timestamp.now(),
-          'status': 'En attente',
-        });
+      final formData = {
+        'enfant': {
+          'nom': _nomEnfantController.text,
+          'sexe': _sexe,
+          'date_naissance': _dateNaissanceController.text,
+          'lieu_naissance': _lieuNaissanceController.text,
+        },
+        'pere': {
+          'nom': _nomPrenomPereController.text,
+          'age_nationalite': _ageNationalitePereController.text,
+          'profession': _professionPereController.text,
+          'domicile': _domicilePereController.text,
+        },
+        'mere': {
+          'nom': _nomPrenomMereController.text,
+          'age_nationalite': _ageNationaliteMereController.text,
+          'profession': _professionMereController.text,
+          'domicile': _domicileMereController.text,
+        },
+        'declarant': {
+          'nom': _nomPrenomDeclarantController.text,
+          'lien': _lienDeclarantController.text,
+          'telephone': _telephoneController.text,
+          'pere_est_declarant': _pereEstDeclarant,
+          'mere_est_declarant': _mereEstDeclarant,
+        },
+        'enfants_anterieurs': {
+          'vivants': _nbEnfantsVieController.text,
+          'decedes': _nbEnfantsDecedesController.text,
+        },
+      };
 
-        Navigator.pop(context); // Ferme le formulaire
-        _showSuccessMessage();
-      } catch (e) {
-        _showErrorDialog(e.toString());
-      }
+      await FirebaseFirestore.instance.collection('citizen_requests').add({
+        'uid': user.uid,
+        'form_type': 'naissance',
+        'form_data': formData,
+        'created_at': Timestamp.now(),
+        'status': 'En attente',
+      });
+
+      _showSuccessMessage();
+    } catch (e) {
+      _showErrorDialog(e.toString());
     }
   }
 
   Future<bool> _showConfirmationDialog() async {
     return await showDialog(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: Text('Confirmation'),
-            content: Text(
-              'Voulez-vous soumettre cette déclaration de naissance ?',
-            ),
-            actions: [
-              TextButton(
-                child: Text('Annuler'),
-                onPressed: () => Navigator.of(ctx).pop(false),
-              ),
-              ElevatedButton(
-                child: Text('Confirmer'),
-                onPressed: () => Navigator.of(ctx).pop(true),
-              ),
-            ],
-          ),
+      builder: (_) => AlertDialog(
+        title: Text('Confirmation'),
+        content: Text('Voulez-vous soumettre cette déclaration de naissance ?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text('Annuler')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: Text('Confirmer')),
+        ],
+      ),
     );
   }
 
   void _showSuccessMessage() {
     showDialog(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: Text('Succès'),
-            content: Text('La déclaration a été enregistrée avec succès.'),
-            actions: [
-              TextButton(
-                child: Text('OK'),
-                onPressed: () => Navigator.of(ctx).pop(),
-              ),
-            ],
-          ),
+      builder: (_) => AlertDialog(
+        title: Text('✅ Succès'),
+        content: Text('La déclaration a été enregistrée avec succès.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop();
+            },
+            child: Text('OK'),
+          )
+        ],
+      ),
     );
   }
 
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: Text('Erreur'),
-            content: Text(message),
-            actions: [
-              TextButton(
-                child: Text('Fermer'),
-                onPressed: () => Navigator.of(ctx).pop(),
-              ),
-            ],
-          ),
+      builder: (_) => AlertDialog(
+        title: Text('❌ Erreur'),
+        content: Text(message),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text('Fermer')),
+        ],
+      ),
+    );
+  }
+
+  Widget buildTextField(TextEditingController controller, String label,
+      {TextInputType keyboardType = TextInputType.text}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(labelText: label, border: OutlineInputBorder()),
+        keyboardType: keyboardType,
+        validator: (val) => val == null || val.isEmpty ? 'Ce champ est requis' : null,
+      ),
+    );
+  }
+
+  Widget buildDateField() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: TextFormField(
+        controller: _dateNaissanceController,
+        readOnly: true,
+        decoration: InputDecoration(
+          labelText: 'Date de naissance',
+          border: OutlineInputBorder(),
+          suffixIcon: Icon(Icons.calendar_today),
+        ),
+        onTap: () => _selectDate(context),
+        validator: (val) => val == null || val.isEmpty ? 'Ce champ est requis' : null,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Déclaration de Naissance')),
+      appBar: AppBar(title: Text("Déclaration de Naissance")),
       body: SingleChildScrollView(
+        controller: _scrollController,
         padding: EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Informations de l\'enfant',
-                style: TextStyle(fontWeight: FontWeight.bold),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 🟨 Informations importantes
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber[50],
+                border: Border.all(color: Colors.amber),
+                borderRadius: BorderRadius.circular(8),
               ),
-              TextFormField(
-                controller: _nomEnfantController,
-                decoration: InputDecoration(labelText: 'Nom de l\'enfant'),
-                validator: (value) => value!.isEmpty ? 'Champ requis' : null,
-              ),
-              Row(
-                children: [
-                  Text('Sexe :'),
-                  Radio(
-                    value: 'Masculin',
-                    groupValue: _sexe,
-                    onChanged: (val) => setState(() => _sexe = val!),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text("ℹ️ Informations importantes",
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  SizedBox(height: 8),
+                  Text(
+                    "✅ La déclaration de naissance est obligatoire et doit être faite dans les 45 jours suivant la naissance au centre d'état civil ou, si à l'étranger, auprès des représentations diplomatiques du Togo.",
+                    style: TextStyle(fontSize: 13),
                   ),
-                  Text('Masculin'),
-                  Radio(
-                    value: 'Féminin',
-                    groupValue: _sexe,
-                    onChanged: (val) => setState(() => _sexe = val!),
+                  SizedBox(height: 8),
+                  Text(
+                    "📎 Pièces à fournir :\n- Attestation de naissance\n- Acte de naissance d’un parent ou carnet prénatal\n- Fiche de déclaration",
+                    style: TextStyle(fontSize: 13),
                   ),
-                  Text('Féminin'),
+                  SizedBox(height: 8),
+                  Text(
+                    "🕒 Dépôt : Lundi à Vendredi 07h-12h / 14h30-17h30\n📍 Annexes : Glidji, Zowla, Fiocondji, Adjido",
+                    style: TextStyle(fontSize: 13),
+                  ),
                 ],
               ),
-              TextFormField(
-                controller: _dateNaissanceController,
-                readOnly: true,
-                decoration: InputDecoration(labelText: 'Date de naissance'),
-                onTap: () => _selectDate(context),
-                validator: (value) => value!.isEmpty ? 'Champ requis' : null,
-              ),
-              TextFormField(
-                controller: _lieuNaissanceController,
-                decoration: InputDecoration(labelText: 'Lieu de naissance'),
-                validator: (value) => value!.isEmpty ? 'Champ requis' : null,
-              ),
+            ),
+            const SizedBox(height: 20),
 
-              SizedBox(height: 16),
-              Text('Père', style: TextStyle(fontWeight: FontWeight.bold)),
-              TextFormField(
-                controller: _nomPrenomPereController,
-                decoration: InputDecoration(labelText: 'Nom & prénom'),
+            // 📝 Formulaire
+            Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  buildTextField(_nomEnfantController, 'Nom de l’enfant'),
+                  DropdownButtonFormField(
+                    value: _sexe,
+                    decoration: InputDecoration(labelText: 'Sexe'),
+                    items: ['Masculin', 'Féminin'].map((val) => DropdownMenuItem(value: val, child: Text(val))).toList(),
+                    onChanged: (val) => setState(() => _sexe = val!),
+                  ),
+                  buildDateField(),
+                  buildTextField(_lieuNaissanceController, 'Lieu de naissance'),
+                  Divider(),
+                  buildTextField(_nomPrenomPereController, 'Nom & Prénom du père'),
+                  buildTextField(_ageNationalitePereController, 'Âge et nationalité du père'),
+                  buildTextField(_professionPereController, 'Profession du père'),
+                  buildTextField(_domicilePereController, 'Domicile du père'),
+                  Divider(),
+                  buildTextField(_nomPrenomMereController, 'Nom & Prénom de la mère'),
+                  buildTextField(_ageNationaliteMereController, 'Âge et nationalité de la mère'),
+                  buildTextField(_professionMereController, 'Profession de la mère'),
+                  buildTextField(_domicileMereController, 'Domicile de la mère'),
+                  Divider(),
+                  buildTextField(_nomPrenomDeclarantController, 'Nom & Prénom du déclarant'),
+                  buildTextField(_lienDeclarantController, 'Lien avec l’enfant'),
+                  buildTextField(_telephoneController, 'Téléphone', keyboardType: TextInputType.phone),
+                  CheckboxListTile(
+                    title: Text("Le père est le déclarant"),
+                    value: _pereEstDeclarant,
+                    onChanged: (val) => setState(() => _pereEstDeclarant = val!),
+                  ),
+                  CheckboxListTile(
+                    title: Text("La mère est le déclarant"),
+                    value: _mereEstDeclarant,
+                    onChanged: (val) => setState(() => _mereEstDeclarant = val!),
+                  ),
+                  Divider(),
+                  buildTextField(_nbEnfantsVieController, 'Nombre d’enfants vivants', keyboardType: TextInputType.number),
+                  buildTextField(_nbEnfantsDecedesController, 'Nombre d’enfants décédés', keyboardType: TextInputType.number),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _submitForm,
+                    child: Text("Soumettre la déclaration"),
+                  ),
+                ],
               ),
-              TextFormField(
-                controller: _ageNationalitePereController,
-                decoration: InputDecoration(labelText: 'Âge & nationalité'),
-              ),
-              TextFormField(
-                controller: _professionPereController,
-                decoration: InputDecoration(labelText: 'Profession'),
-              ),
-              TextFormField(
-                controller: _domicilePereController,
-                decoration: InputDecoration(labelText: 'Domicile'),
-              ),
-
-              SizedBox(height: 16),
-              Text('Mère', style: TextStyle(fontWeight: FontWeight.bold)),
-              TextFormField(
-                controller: _nomPrenomMereController,
-                decoration: InputDecoration(labelText: 'Nom & prénom'),
-              ),
-              TextFormField(
-                controller: _ageNationaliteMereController,
-                decoration: InputDecoration(labelText: 'Âge & nationalité'),
-              ),
-              TextFormField(
-                controller: _professionMereController,
-                decoration: InputDecoration(labelText: 'Profession'),
-              ),
-              TextFormField(
-                controller: _domicileMereController,
-                decoration: InputDecoration(labelText: 'Domicile'),
-              ),
-
-              SizedBox(height: 16),
-              Text('Déclarant', style: TextStyle(fontWeight: FontWeight.bold)),
-              TextFormField(
-                controller: _nomPrenomDeclarantController,
-                decoration: InputDecoration(labelText: 'Nom & prénom'),
-              ),
-              TextFormField(
-                controller: _lienDeclarantController,
-                decoration: InputDecoration(labelText: 'Lien de parenté'),
-              ),
-              TextFormField(
-                controller: _telephoneController,
-                decoration: InputDecoration(labelText: 'Téléphone'),
-              ),
-              CheckboxListTile(
-                value: _pereEstDeclarant,
-                onChanged: (val) => setState(() => _pereEstDeclarant = val!),
-                title: Text('Le père est le déclarant'),
-              ),
-              CheckboxListTile(
-                value: _mereEstDeclarant,
-                onChanged: (val) => setState(() => _mereEstDeclarant = val!),
-                title: Text('La mère est la déclarante'),
-              ),
-
-              SizedBox(height: 16),
-              Text(
-                'Enfants antérieurs',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              TextFormField(
-                controller: _nbEnfantsVieController,
-                decoration: InputDecoration(labelText: 'Enfants vivants'),
-              ),
-              TextFormField(
-                controller: _nbEnfantsDecedesController,
-                decoration: InputDecoration(labelText: 'Enfants décédés'),
-              ),
-
-              SizedBox(height: 20),
-              Center(
-                child: ElevatedButton.icon(
-                  icon: Icon(Icons.send),
-                  label: Text('Soumettre la déclaration'),
-                  onPressed: _submitForm,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

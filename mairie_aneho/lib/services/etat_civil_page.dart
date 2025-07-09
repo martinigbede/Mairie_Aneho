@@ -45,18 +45,18 @@ class EtatCivilPage extends StatelessWidget {
                 children: [
                   _serviceInfoCard(
                     context,
-                    title: 'Demande de Certificat de Naissance',
+                    title: 'Déclaration de Naissance',
                     description:
-                        'Faites une demande de certificat de naissance pour vous ou vos proches.',
+                        'Faites une demande de déclaration de naissance pour vous ou vos proches.',
                     icon: Icons.assignment_ind,
                     color: Colors.teal,
                     navigateTo: const NaissanceForm(),
                   ),
                   _serviceInfoCard(
                     context,
-                    title: 'Jugement supplétif d\'acte de naissance',
+                    title: 'Extrait d’un acte d’état civil',
                     description:
-                        'Faites une demande de jugement supplétif pour les actes de naissance non enregistrés.',
+                        'Faites un extrait de vos acte de naissance.',
                     icon: Icons.gavel,
                     color: Colors.indigo,
                     navigateTo: null,
