@@ -101,7 +101,7 @@ class _NaissanceFormState extends State<NaissanceForm> {
         },
         'pere': {
           'nom': _nomPrenomPereController.text,
-          'age_nationalite': _ageNationalitePereController.text,
+          'age': _ageNationalitePereController.text,
           'profession': _professionPereController.text,
           'domicile': _domicilePereController.text,
         },
@@ -235,21 +235,23 @@ class _NaissanceFormState extends State<NaissanceForm> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
-                  Text("ℹ️ Informations importantes",
+                  Text("ℹ Informations importantes",
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   SizedBox(height: 8),
                   Text(
-                    "✅ La déclaration de naissance est obligatoire et doit être faite dans les 45 jours suivant la naissance au centre d'état civil ou, si à l'étranger, auprès des représentations diplomatiques du Togo.",
+                    " La déclaration de naissance est obligatoire et doit être faite dans les 45 jours suivant la naissance au centre d'état civil ou, si à l'étranger, auprès des représentations diplomatiques du Togo.",
                     style: TextStyle(fontSize: 13),
                   ),
                   SizedBox(height: 8),
                   Text(
-                    "📎 Pièces à fournir :\n- Attestation de naissance\n- Acte de naissance d’un parent ou carnet prénatal\n- Fiche de déclaration",
+                    " Pièces à fournir :\n- Attestation de naissance\n- Acte de naissance d’un parent ou carnet prénatal\n- Fiche de déclaration",
                     style: TextStyle(fontSize: 13),
                   ),
                   SizedBox(height: 8),
                   Text(
-                    "🕒 Dépôt : Lundi à Vendredi 07h-12h / 14h30-17h30\n📍 Annexes : Glidji, Zowla, Fiocondji, Adjido",
+                    " Dépôt : Lundi à Vendredi 07h-12h / 14h30-17h30\n📍 Annexes : Glidji, Zowla, Fiocondji, Adjido ;",
+                    
+
                     style: TextStyle(fontSize: 13),
                   ),
                 ],
@@ -257,7 +259,7 @@ class _NaissanceFormState extends State<NaissanceForm> {
             ),
             const SizedBox(height: 20),
 
-            // 📝 Formulaire
+            //  Formulaire
             Form(
               key: _formKey,
               child: Column(
