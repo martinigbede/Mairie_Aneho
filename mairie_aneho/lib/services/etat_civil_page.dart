@@ -8,7 +8,7 @@ class EtatCivilPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F8), // Couleur de fond douce
+      backgroundColor: const Color(0xFFF4F6F8),
       appBar: AppBar(
         backgroundColor: Colors.teal[800],
         elevation: 4,
@@ -23,7 +23,6 @@ class EtatCivilPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Titre principal
             Text(
               'Service d\'État Civil',
               style: GoogleFonts.poppins(
@@ -39,7 +38,6 @@ class EtatCivilPage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Liste des services
             Expanded(
               child: ListView(
                 children: [
@@ -56,36 +54,74 @@ class EtatCivilPage extends StatelessWidget {
                     context,
                     title: 'Extrait d’un acte d’état civil',
                     description:
-                        'Faites un extrait de vos acte de naissance.',
+                        'Il s’agit de faire sortir les informations essentielles de l’acte de naissance sur un extrait.',
                     icon: Icons.gavel,
                     color: Colors.indigo,
                     navigateTo: null,
                   ),
                   _serviceInfoCard(
                     context,
-                    title: 'Légalisation de documents',
+                    title: 'Copie intégrale de l’acte de naissance',
                     description:
-                        'Demandez la légalisation officielle de vos documents administratifs.',
+                        'Il s’agit de la reproduction totale de l’acte de naissance en cas de perte ou dommage.',
                     icon: Icons.document_scanner,
                     color: Colors.orange,
                     navigateTo: null,
                   ),
                   _serviceInfoCard(
                     context,
-                    title: 'Acte de Mariage',
+                    title: 'Transcription',
                     description:
-                        'Obtenez un extrait ou faites une demande d\'acte de mariage.',
+                        'Transcription d’un jugement supplétif en acte de naissance.',
                     icon: Icons.favorite,
                     color: Colors.pink,
                     navigateTo: null,
                   ),
                   _serviceInfoCard(
                     context,
-                    title: 'Certificat de Décès',
+                    title: 'Droit de recherche',
                     description:
-                        'Demandez un certificat de décès pour vos démarches administratives.',
+                        'Recherche d’un acte d’état civil dans les archives du service.',
                     icon: Icons.local_florist,
                     color: Colors.redAccent,
+                    navigateTo: null,
+                  ),
+
+                  // 🆕 Champs ajoutés :
+                  _serviceInfoCard(
+                    context,
+                    title: 'Changement de nom',
+                    description:
+                        'Procédure permettant de modifier un nom de famille ou prénom officiellement.',
+                    icon: Icons.edit,
+                    color: Colors.deepPurple,
+                    navigateTo: null,
+                  ),
+                  _serviceInfoCard(
+                    context,
+                    title: 'Rectification d’acte',
+                    description:
+                        'Correction d’erreurs matérielles sur un acte d’état civil.',
+                    icon: Icons.rule,
+                    color: Colors.brown,
+                    navigateTo: null,
+                  ),
+                  _serviceInfoCard(
+                    context,
+                    title: 'Certificat de célibat',
+                    description:
+                        'Attestation prouvant que la personne concernée n’est pas mariée.',
+                    icon: Icons.person_off,
+                    color: Colors.blueGrey,
+                    navigateTo: null,
+                  ),
+                  _serviceInfoCard(
+                    context,
+                    title: 'Certificat de nationalité',
+                    description:
+                        'Document officiel attestant de la nationalité togolaise du demandeur.',
+                    icon: Icons.flag,
+                    color: Colors.green,
                     navigateTo: null,
                   ),
                 ],
@@ -120,10 +156,7 @@ class EtatCivilPage extends StatelessWidget {
         ],
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 12,
-          horizontal: 16,
-        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         leading: CircleAvatar(
           backgroundColor: color.withOpacity(0.15),
           radius: 26,
@@ -150,9 +183,7 @@ class EtatCivilPage extends StatelessWidget {
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(
-                  "Le service \"$title\" n'est pas encore disponible.",
-                ),
+                content: Text("Le service \"$title\" n'est pas encore disponible."),
                 backgroundColor: Colors.teal[700],
               ),
             );
