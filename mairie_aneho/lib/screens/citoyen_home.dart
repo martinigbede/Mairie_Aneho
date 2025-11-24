@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+// Assurez-vous que ces chemins d'accès sont corrects dans votre projet
 import 'package:mairie_aneho/screens/historique_page.dart';
 import '../auth/login.dart';
 import '../services/etat_civil_page.dart';
-import '../services/spanc_page.dart';
-import '../services/selpt_page.dart';
-import '../services/communication.dart';
-import '../services/recrouvement_page.dart';
 import '../services/autres_page.dart';
-import '../services/technique_page.dart';
 
 class CitoyenHome extends StatefulWidget {
   const CitoyenHome({super.key});
@@ -20,9 +16,10 @@ class CitoyenHome extends StatefulWidget {
 class _CitoyenHomeState extends State<CitoyenHome> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
-    _AccueilPageContent(),
-    const HistoriqueDemandesPage(),
+  // CLASSE CORRIGÉE : Utilisation d'AccueilPageContent (nom public)
+  final List<Widget> _pages = const [
+    AccueilPageContent(),
+    HistoriqueDemandesPage(),
   ];
 
   void _onItemTapped(int index) {
@@ -32,14 +29,18 @@ class _CitoyenHomeState extends State<CitoyenHome> {
   }
 
   void _logout(BuildContext context) {
-    Navigator.pushReplacement(
+    // Utilisation de pushAndRemoveUntil pour nettoyer la pile de navigation
+    Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginPage()),
+      (Route<dynamic> route) => false, 
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Colors.teal[800];
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
@@ -48,7 +49,7 @@ class _CitoyenHomeState extends State<CitoyenHome> {
           'Espace Citoyen',
           style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20),
         ),
-        backgroundColor: Colors.teal[800],
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         centerTitle: true,
         actions: [
@@ -63,7 +64,7 @@ class _CitoyenHomeState extends State<CitoyenHome> {
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.teal[800],
+        selectedItemColor: primaryColor,
         unselectedItemColor: Colors.grey[500],
         selectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
         unselectedLabelStyle: GoogleFonts.poppins(),
@@ -80,78 +81,13 @@ class _CitoyenHomeState extends State<CitoyenHome> {
   }
 }
 
-class _AccueilPageContent extends StatelessWidget {
-  const _AccueilPageContent();
+// CORRECTION : Renommage de _AccueilPageContent en AccueilPageContent
+class AccueilPageContent extends StatelessWidget {
+  const AccueilPageContent({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.teal[700],
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.account_circle, color: Colors.white, size: 48),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Bienvenue !',
-                      style: GoogleFonts.poppins(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      'Accédez aux services municipaux',
-                      style: GoogleFonts.poppins(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 1.2,
-              ),
-              itemCount: 7,
-              itemBuilder: (context, index) {
-                final service = _getService(index);
-                return _serviceCard(
-                  context,
-                  label: service['label'],
-                  icon: service['icon'],
-                  color: service['color'],
-                  page: service['page'],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+  // Liste de services contenant UNIQUEMENT les deux éléments demandés
   Map<String, dynamic> _getService(int index) {
-    final services = [
+    final List<Map<String, dynamic>> services = [
       {
         "label": "État Civil",
         "icon": Icons.assignment,
@@ -159,43 +95,19 @@ class _AccueilPageContent extends StatelessWidget {
         "page": const EtatCivilPage(),
       },
       {
-        "label": "Selpt",
-        "icon": Icons.location_on,
-        "color": Colors.amber[700]!,
-        "page": const UrbanismePage(),
-      },
-      {
-        "label": "Spanc",
-        "icon": Icons.nature_people,
-        "color": Colors.blue[800]!,
-        "page": const SantePubliquePage(),
-      },
-      {
-        "label": "Communication",
-        "icon": Icons.forum,
-        "color": Colors.black87,
-        "page": const SecuritePage(),
-      },
-      {
-        "label": "Recouvrement",
-        "icon": Icons.assignment_returned,
-        "color": Colors.green[700]!,
-        "page": const EducationPage(),
-      },
-      {
-        "label": "Service Technique",
-        "icon": Icons.build,
-        "color": const Color.fromARGB(255, 70, 69, 50),
-        "page": const TechniquePage(),
-      },
-      {
-        "label": "Autres",
+        "label": "Autres Services", 
         "icon": Icons.more_horiz,
         "color": Colors.grey,
         "page": const AutresPage(),
       },
     ];
-    return services[index];
+    
+    // Ajout d'une vérification pour éviter les erreurs, bien que itemCount soit corrigé
+    if (index >= 0 && index < services.length) {
+        return services[index];
+    }
+    // Fallback sécurisé (ne devrait pas être atteint)
+    throw Exception('Index de service hors limites.');
   }
 
   Widget _serviceCard(
@@ -245,6 +157,89 @@ class _AccueilPageContent extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Carte de Bienvenue (Header)
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.teal[700],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.account_circle, color: Colors.white, size: 48),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Bienvenue !',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        'Accédez aux services municipaux',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          Text(
+            'Services Disponibles',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Grille des services
+          Expanded(
+            child: GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 1.2,
+              ),
+              // CORRECTION CLÉ : itemCount fixé à 2
+              itemCount: 2, 
+              itemBuilder: (context, index) {
+                final service = _getService(index);
+                return _serviceCard(
+                  context,
+                  label: service['label'] as String,
+                  icon: service['icon'] as IconData,
+                  color: service['color'] as Color,
+                  page: service['page'] as Widget,
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

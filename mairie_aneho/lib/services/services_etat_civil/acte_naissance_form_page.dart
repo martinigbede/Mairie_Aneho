@@ -35,6 +35,7 @@ class _NaissanceFormState extends State<NaissanceForm> {
   String _sexe = 'Masculin';
   bool _pereEstDeclarant = false;
   bool _mereEstDeclarant = false;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -76,17 +77,40 @@ class _NaissanceFormState extends State<NaissanceForm> {
       initialDate: DateTime.now(),
       firstDate: DateTime(1950),
       lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Color(0xFF2E7D32),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
-      _dateNaissanceController.text = DateFormat('yyyy-MM-dd').format(picked);
+      _dateNaissanceController.text = DateFormat('dd/MM/yyyy').format(picked);
     }
   }
 
   Future<void> _submitForm() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('⚠️ Veuillez remplir tous les champs obligatoires'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
 
     bool confirmed = await _showConfirmationDialog();
     if (!confirmed) return;
+
+    setState(() => _isSubmitting = true);
 
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -132,8 +156,10 @@ class _NaissanceFormState extends State<NaissanceForm> {
         'status': 'En attente',
       });
 
+      setState(() => _isSubmitting = false);
       _showSuccessMessage();
     } catch (e) {
+      setState(() => _isSubmitting = false);
       _showErrorDialog(e.toString());
     }
   }
@@ -142,30 +168,76 @@ class _NaissanceFormState extends State<NaissanceForm> {
     return await showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Confirmation'),
-        content: Text('Voulez-vous soumettre cette déclaration de naissance ?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.help_outline, color: Color(0xFF2E7D32)),
+            SizedBox(width: 12),
+            Text('Confirmation'),
+          ],
+        ),
+        content: Text(
+          'Voulez-vous soumettre cette déclaration de naissance ?',
+          style: TextStyle(fontSize: 16),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text('Annuler')),
-          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: Text('Confirmer')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Annuler', style: TextStyle(color: Colors.grey[700])),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF2E7D32),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text('Confirmer'),
+          ),
         ],
       ),
-    );
+    ) ?? false;
   }
 
   void _showSuccessMessage() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (_) => AlertDialog(
-        title: Text('✅ Succès'),
-        content: Text('La déclaration a été enregistrée avec succès.'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Column(
+          children: [
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.check_circle, color: Colors.green, size: 48),
+            ),
+            SizedBox(height: 16),
+            Text('Succès !', style: TextStyle(color: Colors.green[700])),
+          ],
+        ),
+        content: Text(
+          'Votre déclaration a été enregistrée avec succès. Vous recevrez une notification dès qu\'elle sera traitée.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 15),
+        ),
         actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-            },
-            child: Text('OK'),
-          )
+          Center(
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              ),
+              child: Text('OK', style: TextStyle(fontSize: 16)),
+            ),
+          ),
         ],
       ),
     );
@@ -175,41 +247,133 @@ class _NaissanceFormState extends State<NaissanceForm> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('❌ Erreur'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.red),
+            SizedBox(width: 12),
+            Text('Erreur'),
+          ],
+        ),
         content: Text(message),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text('Fermer')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text('Fermer'),
+          ),
         ],
       ),
     );
   }
 
-  Widget buildTextField(TextEditingController controller, String label,
-      {TextInputType keyboardType = TextInputType.text}) {
+  Widget buildTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
         controller: controller,
-        decoration: InputDecoration(labelText: label, border: OutlineInputBorder()),
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: Color(0xFF2E7D32)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Color(0xFF2E7D32), width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+        ),
         keyboardType: keyboardType,
-        validator: (val) => val == null || val.isEmpty ? 'Ce champ est requis' : null,
+        validator: (val) => val == null || val.isEmpty ? 'Champ requis' : null,
       ),
     );
   }
 
   Widget buildDateField() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
         controller: _dateNaissanceController,
         readOnly: true,
         decoration: InputDecoration(
           labelText: 'Date de naissance',
-          border: OutlineInputBorder(),
-          suffixIcon: Icon(Icons.calendar_today),
+          prefixIcon: Icon(Icons.calendar_month, color: Color(0xFF2E7D32)),
+          suffixIcon: Icon(Icons.arrow_drop_down),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Color(0xFF2E7D32), width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
         ),
         onTap: () => _selectDate(context),
-        validator: (val) => val == null || val.isEmpty ? 'Ce champ est requis' : null,
+        validator: (val) => val == null || val.isEmpty ? 'Champ requis' : null,
+      ),
+    );
+  }
+
+  Widget buildSectionCard({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: EdgeInsets.only(bottom: 20),
+      child: Padding(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF2E7D32).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: Color(0xFF2E7D32), size: 24),
+                ),
+                SizedBox(width: 12),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2E7D32),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            ...children,
+          ],
+        ),
       ),
     );
   }
@@ -217,99 +381,246 @@ class _NaissanceFormState extends State<NaissanceForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Déclaration de Naissance")),
-      body: SingleChildScrollView(
-        controller: _scrollController,
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 🟨 Informations importantes
-            Container(
-              padding: EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.amber[50],
-                border: Border.all(color: Colors.amber),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text("ℹ Informations importantes",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  SizedBox(height: 8),
-                  Text(
-                    " La déclaration de naissance est obligatoire et doit être faite dans les 45 jours suivant la naissance au centre d'état civil ou, si à l'étranger, auprès des représentations diplomatiques du Togo.",
-                    style: TextStyle(fontSize: 13),
+      backgroundColor: Colors.grey[100],
+      appBar: AppBar(
+        title: Text("Déclaration de Naissance"),
+        backgroundColor: Color(0xFF2E7D32),
+        elevation: 0,
+        centerTitle: true,
+      ),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            controller: _scrollController,
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // En-tête avec informations importantes
+                Container(
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFFFF3E0), Color(0xFFFFE0B2)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.orange.withOpacity(0.2),
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    " Pièces à fournir :\n- Attestation de naissance\n- Acte de naissance d’un parent ou carnet prénatal\n- Fiche de déclaration",
-                    style: TextStyle(fontSize: 13),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.info_outline, color: Colors.orange[800], size: 28),
+                          SizedBox(width: 12),
+                          Text(
+                            "Informations importantes",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Colors.orange[900],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 16),
+                      _buildInfoRow(Icons.access_time, "Délai : 45 jours après la naissance"),
+                      _buildInfoRow(Icons.description, "Documents : Attestation, acte parent, fiche"),
+                      _buildInfoRow(Icons.schedule, "Horaires : Lun-Ven 7h-12h / 14h30-17h30"),
+                      _buildInfoRow(Icons.location_on, "Annexes : Glidji, Zowla, Fiocondji, Adjido"),
+                    ],
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    " Dépôt : Lundi à Vendredi 07h-12h / 14h30-17h30\n📍 Annexes : Glidji, Zowla, Fiocondji, Adjido ;",
-                    
+                ),
+                SizedBox(height: 24),
 
-                    style: TextStyle(fontSize: 13),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
+                // Formulaire
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      // Section Enfant
+                      buildSectionCard(
+                        title: "Informations de l'enfant",
+                        icon: Icons.child_care,
+                        children: [
+                          buildTextField(_nomEnfantController, 'Nom complet de l\'enfant', Icons.person),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: DropdownButtonFormField(
+                              value: _sexe,
+                              decoration: InputDecoration(
+                                labelText: 'Sexe',
+                                prefixIcon: Icon(Icons.wc, color: Color(0xFF2E7D32)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey[50],
+                              ),
+                              items: [
+                                DropdownMenuItem(value: 'Masculin', child: Row(
+                                  children: [
+                                    Icon(Icons.male, size: 20),
+                                    SizedBox(width: 8),
+                                    Text('Masculin'),
+                                  ],
+                                )),
+                                DropdownMenuItem(value: 'Féminin', child: Row(
+                                  children: [
+                                    Icon(Icons.female, size: 20),
+                                    SizedBox(width: 8),
+                                    Text('Féminin'),
+                                  ],
+                                )),
+                              ],
+                              onChanged: (val) => setState(() => _sexe = val!),
+                            ),
+                          ),
+                          buildDateField(),
+                          buildTextField(_lieuNaissanceController, 'Lieu de naissance', Icons.location_city),
+                        ],
+                      ),
 
-            //  Formulaire
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  buildTextField(_nomEnfantController, 'Nom de l’enfant'),
-                  DropdownButtonFormField(
-                    value: _sexe,
-                    decoration: InputDecoration(labelText: 'Sexe'),
-                    items: ['Masculin', 'Féminin'].map((val) => DropdownMenuItem(value: val, child: Text(val))).toList(),
-                    onChanged: (val) => setState(() => _sexe = val!),
+                      // Section Père
+                      buildSectionCard(
+                        title: "Informations du père",
+                        icon: Icons.man,
+                        children: [
+                          buildTextField(_nomPrenomPereController, 'Nom & Prénom', Icons.badge),
+                          buildTextField(_ageNationalitePereController, 'Âge et nationalité', Icons.public),
+                          buildTextField(_professionPereController, 'Profession', Icons.work),
+                          buildTextField(_domicilePereController, 'Domicile', Icons.home),
+                        ],
+                      ),
+
+                      // Section Mère
+                      buildSectionCard(
+                        title: "Informations de la mère",
+                        icon: Icons.woman,
+                        children: [
+                          buildTextField(_nomPrenomMereController, 'Nom & Prénom', Icons.badge),
+                          buildTextField(_ageNationaliteMereController, 'Âge et nationalité', Icons.public),
+                          buildTextField(_professionMereController, 'Profession', Icons.work),
+                          buildTextField(_domicileMereController, 'Domicile', Icons.home),
+                        ],
+                      ),
+
+                      // Section Déclarant
+                      buildSectionCard(
+                        title: "Informations du déclarant",
+                        icon: Icons.assignment_ind,
+                        children: [
+                          buildTextField(_nomPrenomDeclarantController, 'Nom & Prénom', Icons.person_outline),
+                          buildTextField(_lienDeclarantController, 'Lien avec l\'enfant', Icons.family_restroom),
+                          buildTextField(_telephoneController, 'Téléphone', Icons.phone, keyboardType: TextInputType.phone),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.blue[50],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: CheckboxListTile(
+                              title: Text("Le père est le déclarant"),
+                              value: _pereEstDeclarant,
+                              activeColor: Color(0xFF2E7D32),
+                              onChanged: (val) => setState(() => _pereEstDeclarant = val!),
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.pink[50],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: CheckboxListTile(
+                              title: Text("La mère est le déclarant"),
+                              value: _mereEstDeclarant,
+                              activeColor: Color(0xFF2E7D32),
+                              onChanged: (val) => setState(() => _mereEstDeclarant = val!),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Section Enfants antérieurs
+                      buildSectionCard(
+                        title: "Enfants antérieurs",
+                        icon: Icons.groups,
+                        children: [
+                          buildTextField(_nbEnfantsVieController, 'Nombre d\'enfants vivants', Icons.favorite, keyboardType: TextInputType.number),
+                          buildTextField(_nbEnfantsDecedesController, 'Nombre d\'enfants décédés', Icons.heart_broken, keyboardType: TextInputType.number),
+                        ],
+                      ),
+
+                      // Bouton de soumission
+                      Container(
+                        width: double.infinity,
+                        height: 56,
+                        margin: EdgeInsets.only(bottom: 40),
+                        child: ElevatedButton(
+                          onPressed: _isSubmitting ? null : _submitForm,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFF2E7D32),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 4,
+                          ),
+                          child: _isSubmitting
+                              ? SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.send, size: 24),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      "Soumettre la déclaration",
+                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ],
                   ),
-                  buildDateField(),
-                  buildTextField(_lieuNaissanceController, 'Lieu de naissance'),
-                  Divider(),
-                  buildTextField(_nomPrenomPereController, 'Nom & Prénom du père'),
-                  buildTextField(_ageNationalitePereController, 'Âge et nationalité du père'),
-                  buildTextField(_professionPereController, 'Profession du père'),
-                  buildTextField(_domicilePereController, 'Domicile du père'),
-                  Divider(),
-                  buildTextField(_nomPrenomMereController, 'Nom & Prénom de la mère'),
-                  buildTextField(_ageNationaliteMereController, 'Âge et nationalité de la mère'),
-                  buildTextField(_professionMereController, 'Profession de la mère'),
-                  buildTextField(_domicileMereController, 'Domicile de la mère'),
-                  Divider(),
-                  buildTextField(_nomPrenomDeclarantController, 'Nom & Prénom du déclarant'),
-                  buildTextField(_lienDeclarantController, 'Lien avec l’enfant'),
-                  buildTextField(_telephoneController, 'Téléphone', keyboardType: TextInputType.phone),
-                  CheckboxListTile(
-                    title: Text("Le père est le déclarant"),
-                    value: _pereEstDeclarant,
-                    onChanged: (val) => setState(() => _pereEstDeclarant = val!),
-                  ),
-                  CheckboxListTile(
-                    title: Text("La mère est le déclarant"),
-                    value: _mereEstDeclarant,
-                    onChanged: (val) => setState(() => _mereEstDeclarant = val!),
-                  ),
-                  Divider(),
-                  buildTextField(_nbEnfantsVieController, 'Nombre d’enfants vivants', keyboardType: TextInputType.number),
-                  buildTextField(_nbEnfantsDecedesController, 'Nombre d’enfants décédés', keyboardType: TextInputType.number),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _submitForm,
-                    child: Text("Soumettre la déclaration"),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: Colors.orange[700]),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 14, color: Colors.grey[800], height: 1.4),
+            ),
+          ),
+        ],
       ),
     );
   }
